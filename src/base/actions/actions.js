@@ -14,6 +14,7 @@ export const GOT_JSON_LD_DOCUMENT = 'GOT_JSON_LD_DOCUMENT';
 export const DOWNLOADED_EXTERNAL = 'DOWNLOADED_EXTERNAL';
 export const GOT_EXTERNAL = 'GOT_EXTERNAL';
 export const GOT_FEED = 'GOT_FEED';
+export const GOT_SENSOR_FEED = 'GOT_SENSOR_FEED';
 export const LOGIN_MESSAGE = 'LOGIN_MESSAGE';
 export const MY_LIST_READY = 'MY_LIST_READY';
 export const TAB_CLICK = 'TAB_CLICK';
@@ -80,6 +81,16 @@ export function gotFeed(url, feed: LdJsonDocument) {
   };
 }
 
+export function gotSensorFeed(url, sensorData: LdJsonDocument) {
+  return {
+    type: GOT_SENSOR_FEED,
+    payload: {
+    sensorData,
+    url
+    },
+  };
+}
+
 export function gotJSON_LD_Document(data: LdJsonDocument, url: string, toc: TableOfContents) {
   return (dispatch) => {
     dispatch({
@@ -137,13 +148,35 @@ export const loadFeed = (url: string) => async (dispatch: Function) => {
   }
 };
 
+export const loadSensorFeed = (url: string) => async (dispatch: Function) => {
+  if (url) {
+    try {
+          const itemDoc = await getHttp(url);
+          if(itemDoc) {
+            await Promise.all(itemDoc.data[0].itemListElement.map(async sensor => {
+              const feedItemDoc = await getHttp(sensor.url);
+              const feedItemList = feedItemDoc.data.find(item => item['@type'].toLowerCase() == 'itemlist');
+              if(feedItemList) {
+              await Promise.all(feedItemList.itemListElement.map(async listItem=> {
+                const feedItemListDoc = await getHttp(listItem.url);
+               dispatch(gotSensorFeed(sensor.url, feedItemListDoc));
+              }))
+            }
+            }))
+          }
+    } catch (err) {
+      console.log('Unable to download feed $(url}');
+    }
+  }
+};
+
 export function loadDocumentWithData(data: LdJsonDocument, url: string) {
   return (dispatch: Function) => {
     const firstActive = firstRoute();
     const toc = extractPageNavigation(data, firstActive);
     dispatch(gotJSON_LD_Document(data, url, toc));
 
-    toc.covers.map(async (cover: Object) => {
+      toc.covers.map(async (cover: Object) => {
       if (cover.url) {
         try {
           const doc: LdJsonDocument = await getHttp(cover.url);
@@ -154,9 +187,12 @@ export function loadDocumentWithData(data: LdJsonDocument, url: string) {
       }
     });
 
-    toc.external.map(async (externalDoc: Object, i: number) => { 
+    toc.external.map(async (externalDoc: Object, i: number) => {
       if(externalDoc.name.toLowerCase().includes('feed')) {
         dispatch(loadFeed(externalDoc.url))
+      } 
+      else if(externalDoc.name.toLowerCase().includes('dashboard')) {
+        dispatch(loadSensorFeed(externalDoc.url));
       } else {
         dispatch(loadExternal(i, externalDoc.url));
       }

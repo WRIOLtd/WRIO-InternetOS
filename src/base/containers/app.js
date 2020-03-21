@@ -27,35 +27,25 @@ import { postUpdateHook } from "base/actions/hashUpdateHook";
 
 const RightNav = ({ onCloseTab }) => {
   return (
-    <div className="right-nav">
-      <a
-        href="#"
-        onClick={onCloseTab}
-        className="btn btn-just-icon btn-simple btn-default btn-sm btn-flat pull-right"
-      >
+    <div className="right-nav hidden"> /* temp hidden */
+      <a href="#" onClick={onCloseTab} className="btn btn-just-icon btn-simple btn-default btn-sm btn-flat pull-right">
         <i className="material-icons dp_big">highlight_off</i>
       </a>
-      <a
-        href="#"
-        className="hidden btn btn-just-icon btn-simple btn-default btn-lg"
-      >
+      <a href="#" className="hidden btn btn-just-icon btn-simple btn-default btn-lg">
         <i className="material-icons dp_big">bookmark</i>
       </a>
-      <a
-        href="#"
-        className="hidden btn btn-just-icon btn-simple btn-default btn-lg"
-      >
+      <a href="#" className="hidden btn btn-just-icon btn-simple btn-default btn-lg">
         <i className="material-icons dp_big">share</i>
       </a>
     </div>
   );
 };
 
-const LoginBar = ({ profile, readItLater }) => {
-  return (
-    <div className="profile">{!!profile && <Login profile={profile} readItLater={readItLater} />}</div>
-  );
-};
+// const LoginBar = ({ profile, readItLater }) => {
+//   return (
+//     <div className="profile">{!!profile && <Login profile={profile} readItLater={readItLater} />}</div>
+//   );
+// };
 
 class Main extends React.Component {
   constructor(props) {
@@ -86,10 +76,10 @@ class Main extends React.Component {
     return (
       <div>
         <VerticalNav vertical={true} showUp={false} />
-        <LoginBar
+        {/* <LoginBar
           profile={this.props.profile}
           readItLater={this.props.readItLater}
-        />
+        /> */}
         <RightNav onCloseTab={() => {
           this.props.dispatch(PlusActions.onCloseTab())
         }}/>
@@ -103,8 +93,9 @@ class Main extends React.Component {
             editAllowed={this.props.editAllowed}
             //RIL={this.props.readItLater}
             tabKey={this.props.tabKey}
-            tabClick={tab => this.props.dispatch(Actions.tabClick(tab))}           
+            tabClick={tab => this.props.dispatch(Actions.tabClick(tab))}
             feed={this.props.feed}
+            sensorData={this.props.sensorData}
           />
         </div>
       </div>
@@ -176,8 +167,8 @@ class Main extends React.Component {
 
 const mapStateToProps = state => ({
   url: state.document.url,
-  profile: state.login.profile,
-  wrioID: state.login.wrioID,
+  //profile: state.login.profile,
+  wrioID: 'anonymous',
   editAllowed: state.document.editAllowed,
   toc: state.document.toc,
   lists: state.document.lists,
@@ -185,6 +176,7 @@ const mapStateToProps = state => ({
   tabKey: state.document.tabKey,
   externals: state.header.externals,
   feed: state.document.feed,
+  sensorData: state.document.sensorData
 });
 
 const MainMapped = connect(mapStateToProps)(Main);

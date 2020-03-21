@@ -33,7 +33,9 @@ type DocumentState = {
   url: string,
   wrioID: ?string, // current logged in user WRIO-ID
   profile: ?Object,
-  feed: Array<any>
+  feed: Array<any>,
+  sensorData: Array<any>,
+  geoCoordinates: Array<any>
 };
 
 const defaultState: DocumentState = {
@@ -50,6 +52,8 @@ const defaultState: DocumentState = {
     external: [],
   },  
   feed: [],
+  sensorData:[],
+  geoCoordinates: []
 };
 
 function DocumentReducer(state: DocumentState = defaultState, action: Object) {
@@ -96,7 +100,31 @@ function DocumentReducer(state: DocumentState = defaultState, action: Object) {
     case actions.GOT_FEED:
       return {
         ...state,
-        feed: action.payload.feed.data[0]
+        feed: action.payload.feed.data[0],
+        feedProductData: action.payload.feed.data[1],
+        geoCoordinates: [
+          +action.payload.feed.data[2].longitude,         
+          +action.payload.feed.data[2].latitude,
+        ]
+       }
+
+    case actions.GOT_SENSOR_FEED:
+      console.log('state ========== sensor feed', state);
+      return {
+        ...state,
+        sensorData: [...state.sensorData,{ 
+          payload: action.payload.sensorData.data[0],
+          productData:action.payload.sensorData.data[1],
+          url: action.payload.url
+        }],
+          geoCoordinates: [
+            ...state.geoCoordinates,
+            {
+              feedUrl: action.payload.url,
+              longitude:+action.payload.sensorData.data[2].longitude,         
+              latitude:+action.payload.sensorData.data[2].latitude,
+            },
+          ]
        }
 
     default:
